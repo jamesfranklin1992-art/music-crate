@@ -91,10 +91,13 @@ function Drawer({ track, onClose, onToggleOwned }) {
             </>
           )}
 
-          {/* Where to buy */}
+                {/* Where to buy */}
           <div className="section-h">
             Where to buy
             <span className="mini">SEARCH STORES</span>
+          </div>
+          <div className="prices">
+            <WhereToBuy track={track} />
           </div>
           <div className="prices">
             {(() => {
@@ -138,7 +141,38 @@ function Drawer({ track, onClose, onToggleOwned }) {
     </>
   );
 }
-
+function WhereToBuy({ track }) {
+  const query = encodeURIComponent(track.artist + ' ' + track.title);
+  const stores = [
+    { id: 'discogs',  name: 'Discogs',  mark: 'D',  fmt: 'Vinyl',         url: 'https://www.discogs.com/search/?q=' + query + '&type=release' },
+    { id: 'bandcamp', name: 'Bandcamp', mark: 'B',  fmt: 'Digital / WAV', url: 'https://bandcamp.com/search?q=' + query },
+    { id: 'beatport', name: 'Beatport', mark: 'BP', fmt: 'Digital / MP3', url: 'https://www.beatport.com/search?q=' + query },
+  ];
+  return (
+    <React.Fragment>
+      {stores.map(s => (
+        <div key={s.id} className="price-row">
+          <div className="store">
+            <div className="mark">{s.mark}</div>
+            <div>
+              <div className="name">{s.name}</div>
+              <span className="fmt">{s.fmt}</span>
+            </div>
+          </div>
+          
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn sm"
+            style={{textDecoration:'none'}}
+          >
+            Search →
+          </a>
+        </div>
+      ))}
+    </React.Fragment>
+  );
+}
 function RelatedList({ track }) {
   const related = window.TRACKS.filter(t => t.label === track.label && t.id !== track.id).slice(0, 4);
   if (related.length === 0) {
