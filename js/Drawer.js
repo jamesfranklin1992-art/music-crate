@@ -106,26 +106,34 @@ function Drawer({ track, onClose, onToggleOwned }) {
             <span className="mini">{available.length} / {priceEntries.length} AVAILABLE</span>
           </div>
           <div className="prices">
-            {priceEntries.map(p => {
-              const isBest = p.id === best;
-              const unavail = p.price == null;
-              return (
-                <div key={p.id} className={`price-row ${isBest?'best':''} ${unavail?'unavail':''}`}>
-                  <div className="store">
-                    <div className="mark">{p.mark}</div>
-                    <div>
-                      <div className="name">
-                        {p.name}
-                        {isBest && <span className="best-badge">Best</span>}
-                      </div>
-                      <span className="fmt">{p.fmt}</span>
-                    </div>
-                  </div>
-                  <div className="p">{unavail ? 'Not listed' : `$${p.price.toFixed(2)}`}</div>
-                  <button className="btn sm" disabled={unavail}>{unavail ? '—' : 'Open →'}</button>
-                </div>
-              );
-            })}
+         {(() => {
+  const query = encodeURIComponent(`${track.artist} ${track.title}`);
+  const stores = [
+    { id: 'discogs',  name: 'Discogs',  mark: 'D', fmt: 'Vinyl',         url: `https://www.discogs.com/search/?q=${query}&type=release` },
+    { id: 'bandcamp', name: 'Bandcamp', mark: 'B', fmt: 'Digital / WAV', url: `https://bandcamp.com/search?q=${query}` },
+    { id: 'beatport', name: 'Beatport', mark: 'BP', fmt: 'Digital / MP3', url: `https://www.beatport.com/search?q=${query}` },
+  ];
+  return stores.map(s => (
+    <div key={s.id} className="price-row">
+      <div className="store">
+        <div className="mark">{s.mark}</div>
+        <div>
+          <div className="name">{s.name}</div>
+          <span className="fmt">{s.fmt}</span>
+        </div>
+      </div>
+      
+        href={s.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn sm"
+        style={{textDecoration:'none'}}
+      >
+        Search →
+      </a>
+    </div>
+  ));
+})()}
           </div>
 
           {/* Related / meta */}
