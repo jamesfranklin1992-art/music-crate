@@ -1,220 +1,90 @@
-// main.js — top-level App + Tweaks wiring
+// Sample library — 50+ tracks across the user's taste profile
+// House, Alternative, Funk, Italo Disco, Disco, UK Garage, Soul, Electro, Dub
 
-// ── localStorage helpers ───────────────────────────────────
-const STORAGE_KEYS = {
-  tracks:    'crate:tracks',
-  playlists: 'crate:playlists',
-  tweaks:    'crate:tweaks',
-};
+window.SOURCES = [
+  { id: 'radio',   label: 'Radio',           glyph: '◉' },
+  { id: 'mix',     label: 'DJ Mix',          glyph: '◐' },
+  { id: 'rec',     label: 'Recommendation',  glyph: '☉' },
+  { id: 'ig',      label: 'Social Media',    glyph: '◇' },
+  { id: 'algo',    label: 'Algorithm',       glyph: '△' },
+  { id: 'live',    label: 'Live / Club',     glyph: '◼' },
+];
 
-function loadFromStorage(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch (e) {
-    console.warn('[Crate] Failed to load', key, e);
-    return fallback;
-  }
-}
+window.MOODS = [
+  'peak-time','warm-up','after-hours','sunday','driving','cooking',
+  'heater','slow-burn','weapon','sentimental','hypnotic','raw',
+  'euphoric','dubby','acid','soulful','stripped','party'
+];
 
-function saveToStorage(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.warn('[Crate] Failed to save', key, e);
-  }
-}
+// Helper to keep data compact
+const t = (id, title, artist, year, label, genre, bpm, key, source, sourceDetail, mood, dateHeard, notes, prices) => ({
+  id, title, artist, year, label, genre, bpm, key, source, sourceDetail, mood, dateHeard, notes, prices
+});
 
-function usePersisted(storageKey, fallback) {
-  const [state, setState] = React.useState(() => loadFromStorage(storageKey, fallback));
-  const set = React.useCallback((updater) => {
-    setState(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      saveToStorage(storageKey, next);
-      return next;
-    });
-  }, [storageKey]);
-  return [state, set];
-}
-// ──────────────────────────────────────────────────────────
+window.TRACKS = [
+  t('trk-01','Plastic Dreams','Jaydee',1992,'R & S Records','House',124,'Am','mix','Ben UFO b2b Joy O — RA.889','hypnotic,peak-time','2026-04-18','That organ stab still unreal',{ discogs: 12, bandcamp: null, beatport: 2.49 }),
+  t('trk-02','Funky Town','Lipps Inc.',1980,'Casablanca','Disco',121,'Cm','radio','NTS — Floating Points','party,euphoric','2026-04-17','',{ discogs: 4, bandcamp: 1.99, beatport: null }),
+  t('trk-03','Rej','Âme',2005,'Innervisions','House',123,'Fm','live','Freedom Time, Sydney','peak-time,hypnotic','2026-04-15','Dropped at 2am, room lost it',{ discogs: 18, bandcamp: 2.49, beatport: 2.99 }),
+  t('trk-04','I Feel Love','Donna Summer',1977,'Casablanca','Disco',124,'F#m','rec','from Jules','euphoric,sentimental','2026-04-14','',{ discogs: 8, bandcamp: null, beatport: 1.99 }),
+  t('trk-05','Flim','Aphex Twin',1997,'Warp','Alternative',110,'Em','algo','Spotify Daily Mix 3','sunday,sentimental','2026-04-13','',{ discogs: 22, bandcamp: 1.50, beatport: null }),
+  t('trk-06','Pacific State','808 State',1989,'ZTT','House',124,'Am','radio','Rinse FM — Shy One','warm-up,soulful','2026-04-12','',{ discogs: 14, bandcamp: null, beatport: 2.49 }),
+  t('trk-07','Running Away','Roy Ayers',1977,'Polydor','Soul',102,'Dm','rec','from M','sunday,soulful','2026-04-11','',{ discogs: 25, bandcamp: 2.99, beatport: null }),
+  t('trk-08','Spacer Woman','Charlie',1983,'Mr. Disc','Italo Disco',122,'Am','mix','Palms Trax — Dekmantel','driving,raw','2026-04-11','',{ discogs: 45, bandcamp: null, beatport: 3.49 }),
+  t('trk-09','Flash Light','Parliament',1977,'Casablanca','Funk',108,'Gm','ig','@dublab reel','party,soulful','2026-04-10','',{ discogs: 9, bandcamp: null, beatport: null }),
+  t('trk-10','Needin U','David Morales',1998,'Def Mix','House',127,'Am','live','Sub Club, Glasgow','euphoric,peak-time','2026-04-09','',{ discogs: 11, bandcamp: null, beatport: 2.49 }),
+  t('trk-11','22','Little Dragon',2017,'Ninja Tune','Alternative',112,'Dm','algo','Apple For You','sentimental','2026-04-08','',{ discogs: 6, bandcamp: 1.99, beatport: null }),
+  t('trk-12','RIP Groove','Double 99',1997,'Satellite','UK Garage',130,'F#m','mix','Sherelle — BBC R1','weapon,peak-time','2026-04-07','',{ discogs: 16, bandcamp: null, beatport: 2.99 }),
+  t('trk-13','Clear','Cybotron',1983,'Fantasy','Electro',118,'Em','rec','from Theo','hypnotic,driving','2026-04-06','',{ discogs: 19, bandcamp: null, beatport: 2.49 }),
+  t('trk-14','At Les','Carl Craig',1997,'Planet E','House',125,'Fm','mix','Honey Dijon — Boiler Room','after-hours,sentimental','2026-04-05','Absolute weapon in any set',{ discogs: 28, bandcamp: 2.99, beatport: 3.49 }),
+  t('trk-15','Got To Be Real','Cheryl Lynn',1978,'Columbia','Disco',120,'Am','radio','NTS — Moxie','party,soulful','2026-04-05','',{ discogs: 5, bandcamp: null, beatport: null }),
+  t('trk-16','Midnight Star','Midnight Star',1983,'Solar','Funk',110,'Bbm','ig','@diggersdelight','driving','2026-04-04','',{ discogs: 12, bandcamp: null, beatport: null }),
+  t('trk-17','Flim Flam','Marcel Dettmann',2013,'MDR','House',128,'Am','live','Berghain','raw,peak-time','2026-04-03','',{ discogs: 14, bandcamp: 2.49, beatport: 2.99 }),
+  t('trk-18','Intergalactic','Larry Heard',1990,'Trax','House',122,'Dm','rec','from Jules','hypnotic,sunday','2026-04-02','',{ discogs: 32, bandcamp: null, beatport: 2.49 }),
+  t('trk-19','Soul Makossa','Manu Dibango',1972,'Fiesta','Soul',118,'Gm','mix','Antal — RA','soulful,party','2026-04-01','',{ discogs: 20, bandcamp: null, beatport: null }),
+  t('trk-20','Hyph Mngo','Joy Orbison',2009,'Hotflush','UK Garage',130,'Am','radio','Rinse FM','euphoric,weapon','2026-03-31','Still hits in 2026',{ discogs: 18, bandcamp: 2.99, beatport: 2.49 }),
+  t('trk-21','Dub Housing','Pere Ubu',1978,'Chrysalis','Alternative',104,'Em','algo','Spotify Release Radar','raw,sentimental','2026-03-30','',{ discogs: 11, bandcamp: 1.99, beatport: null }),
+  t('trk-22','King of My Castle','Wamdue Project',1999,'Strictly Rhythm','House',126,'Fm','ig','@housemusicfeed','peak-time','2026-03-29','',{ discogs: 7, bandcamp: null, beatport: 1.99 }),
+  t('trk-23','Jungle Jazz','Kool & The Gang',1977,'De-Lite','Funk',112,'Cm','rec','from Sal','driving,soulful','2026-03-28','',{ discogs: 9, bandcamp: null, beatport: null }),
+  t('trk-24','Musique','Space',1977,'Vogue','Italo Disco',120,'Dm','mix','Prosumer — Panorama Bar','hypnotic,after-hours','2026-03-27','',{ discogs: 24, bandcamp: null, beatport: 2.49 }),
+  t('trk-25','Heartbeat','Taana Gardner',1981,'West End','Disco',98,'F#m','radio','NTS — The Do!! You!!! Breakfast Show','slow-burn,soulful','2026-03-26','',{ discogs: 15, bandcamp: null, beatport: null }),
+  t('trk-26','Dance Yrself Clean','LCD Soundsystem',2010,'DFA','Alternative',115,'Dm','live','Laneway Festival','euphoric,peak-time','2026-03-25','',{ discogs: 14, bandcamp: 1.29, beatport: null }),
+  t('trk-27','Shake Shake','Sharon Redd',1983,'Prelude','Disco',121,'Am','mix','HAAi — Essential Mix','party','2026-03-24','',{ discogs: 13, bandcamp: null, beatport: null }),
+  t('trk-28','Al-Naafiysh','Hashim',1983,'Cutting','Electro',116,'Em','rec','from Theo','raw,hypnotic','2026-03-23','',{ discogs: 22, bandcamp: null, beatport: 2.99 }),
+  t('trk-29','The Bells','Jeff Mills',1996,'Purpose Maker','House',135,'Am','live','Boiler Room Berlin','peak-time,weapon','2026-03-22','',{ discogs: 17, bandcamp: 2.49, beatport: 2.99 }),
+  t('trk-30','Love Is The Message','MFSB',1973,'Philadelphia International','Disco',114,'Gm','radio','Worldwide FM — Gilles Peterson','soulful,sentimental','2026-03-21','',{ discogs: 18, bandcamp: null, beatport: null }),
+  t('trk-31','Little Fluffy Clouds','The Orb',1990,'Big Life','Alternative',110,'C','algo','Apple Classical Chill','sunday,dubby','2026-03-20','',{ discogs: 12, bandcamp: 1.99, beatport: null }),
+  t('trk-32','Flowers','Sweet Female Attitude',1999,'WEA','UK Garage',129,'F#m','ig','@ukgaragemassive','euphoric,sentimental','2026-03-19','',{ discogs: 10, bandcamp: null, beatport: 2.49 }),
+  t('trk-33','Dub Be Good To Me','Beats International',1990,'Go!Beat','Dub',104,'Dm','radio','BBC 6 Music — Lauren Laverne','dubby,slow-burn','2026-03-18','',{ discogs: 8, bandcamp: null, beatport: null }),
+  t('trk-34','Marea (We\u2019ve Lost Dancing)','Fred again..',2020,'Atlantic','Alternative',128,'Am','algo','Spotify Discover Weekly','sentimental,peak-time','2026-03-17','',{ discogs: 16, bandcamp: 1.99, beatport: 2.49 }),
+  t('trk-35','Ain\u2019t No Stoppin\u2019 Us Now','McFadden & Whitehead',1979,'Philadelphia International','Soul',118,'Ab','rec','from mum','soulful,euphoric','2026-03-16','Family dinner banger',{ discogs: 6, bandcamp: null, beatport: null }),
+  t('trk-36','Destination Unknown','Alexander Robotnick',1984,'Fuzz Dance','Italo Disco',118,'Em','mix','DJ Tennis — Life and Death','hypnotic,driving','2026-03-15','',{ discogs: 30, bandcamp: null, beatport: 2.99 }),
+  t('trk-37','Your Love','Frankie Knuckles',1987,'Trax','House',120,'Am','radio','NTS — Charlie Bones','hypnotic,sentimental','2026-03-14','',{ discogs: 11, bandcamp: null, beatport: 1.99 }),
+  t('trk-38','Body & Soul','Kerri Chandler',1998,'Nitegrooves','House',125,'Fm','live','Subsonic Festival','after-hours,soulful','2026-03-13','',{ discogs: 24, bandcamp: 2.49, beatport: 2.99 }),
+  t('trk-39','Computer World','Kraftwerk',1981,'Kling Klang','Electro',120,'Dm','rec','from Theo','hypnotic,raw','2026-03-12','',{ discogs: 26, bandcamp: null, beatport: 2.49 }),
+  t('trk-40','Flash','Green Velvet',1995,'Relief','House',127,'Em','mix','Jamie xx — Essential Mix','acid,peak-time','2026-03-11','',{ discogs: 14, bandcamp: null, beatport: 2.49 }),
+  t('trk-41','The Mexican','Babe Ruth',1972,'Harvest','Funk',116,'F#m','ig','@cratediggers','driving','2026-03-10','',{ discogs: 22, bandcamp: null, beatport: null }),
+  t('trk-42','Silent Shout','The Knife',2006,'Rabid','Alternative',117,'Am','algo','Apple Dark Electronic','raw,hypnotic','2026-03-09','',{ discogs: 10, bandcamp: 1.49, beatport: null }),
+  t('trk-43','Ventura','El Guincho',2008,'Young Turks','Alternative',130,'Dm','rec','from Sal','euphoric,party','2026-03-08','',{ discogs: 8, bandcamp: 1.99, beatport: null }),
+  t('trk-44','Buffalo Stance','Neneh Cherry',1988,'Circa','Funk',108,'Em','radio','NTS — 12\u201d','driving,party','2026-03-07','',{ discogs: 7, bandcamp: null, beatport: null }),
+  t('trk-45','String Free','UR',1991,'Underground Resistance','House',132,'Am','live','Dekmantel Festival','peak-time,raw','2026-03-06','',{ discogs: 35, bandcamp: null, beatport: 3.49 }),
+  t('trk-46','Lovely Day','Bill Withers',1977,'Columbia','Soul',96,'Eb','rec','from Jules','sunday,sentimental','2026-03-05','',{ discogs: 5, bandcamp: null, beatport: null }),
+  t('trk-47','Da Funk','Daft Punk',1995,'Soma','House',110,'Fm','radio','Rinse FM — Jyoty','party,weapon','2026-03-04','',{ discogs: 19, bandcamp: null, beatport: 2.49 }),
+  t('trk-48','Hallogallo','Neu!',1972,'Brain','Alternative',128,'C','algo','Spotify Krautrock','driving,hypnotic','2026-03-03','',{ discogs: 20, bandcamp: 1.99, beatport: null }),
+  t('trk-49','Can\u2019t Get By Without You','The Real Thing',1976,'Pye','Soul',112,'Bb','ig','@soulnorth','soulful,sunday','2026-03-02','',{ discogs: 9, bandcamp: null, beatport: null }),
+  t('trk-50','Expansions','Lonnie Liston Smith',1975,'Flying Dutchman','Soul',108,'Dm','rec','from Sal','soulful,hypnotic','2026-03-01','',{ discogs: 14, bandcamp: null, beatport: null }),
+  t('trk-51','Energy Flash','Joey Beltram',1990,'R & S Records','House',138,'Am','mix','Helena Hauff — Crack Mix','raw,weapon','2026-02-28','',{ discogs: 22, bandcamp: null, beatport: 2.99 }),
+  t('trk-52','Love Can\u2019t Turn Around','Farley "Jackmaster" Funk',1986,'Trax','House',118,'Em','radio','NTS — Ruf Dug','euphoric,sentimental','2026-02-27','',{ discogs: 12, bandcamp: null, beatport: 1.99 }),
+  t('trk-53','King Tubby Meets Rockers Uptown','Augustus Pablo',1976,'Clocktower','Dub',80,'Dm','rec','from M','dubby,slow-burn','2026-02-26','',{ discogs: 26, bandcamp: 2.49, beatport: null }),
+  t('trk-54','Strings of Life','Rhythim Is Rhythim',1987,'Transmat','House',124,'Cm','live','Pitch Festival','euphoric,peak-time','2026-02-25','',{ discogs: 28, bandcamp: null, beatport: 2.99 }),
+  t('trk-55','Tenebre','Goblin',1982,'Cinevox','Italo Disco',122,'Am','mix','Daniele Baldelli — Cosmic','hypnotic,driving','2026-02-24','',{ discogs: 32, bandcamp: null, beatport: 2.49 }),
+];
 
-function App() {
-  const [tracks, setTracks]       = usePersisted(STORAGE_KEYS.tracks,    window.TRACKS);
-  const [playlists, setPlaylists] = usePersisted(STORAGE_KEYS.playlists, []);
-  const [tweaks, setTweaksState]  = usePersisted(STORAGE_KEYS.tweaks,    window.TWEAKS_DEFAULTS);
-  const [inbox, setInbox]         = React.useState(() => window.INBOX);  // inbox is session-only
-  const [view, setView]           = React.useState('crate'); // 'crate' | 'inbox' | 'playlists'
-  const [activeId, setActiveId]   = React.useState(null);
-  const [filter, setFilter]       = React.useState({ source: 'all', owned: 'all', q: '' });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [toast, setToast]         = React.useState(null);
+// Mark a spread of tracks as "owned" to demo the state out of the box
+const OWNED_IDS = new Set([
+  'trk-01','trk-03','trk-08','trk-14','trk-17','trk-20','trk-24',
+  'trk-29','trk-36','trk-38','trk-45','trk-51','trk-53','trk-55'
+]);
+window.TRACKS.forEach(t => { t.owned = OWNED_IDS.has(t.id); });
 
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-font', tweaks.font);
-    document.documentElement.setAttribute('data-density', tweaks.density);
-  }, [tweaks]);
-
-  React.useEffect(() => {
-    const handler = (e) => {
-      const d = e.data || {};
-      if (d.type === '__activate_edit_mode') setTweaksOpen(true);
-      if (d.type === '__deactivate_edit_mode') setTweaksOpen(false);
-    };
-    window.addEventListener('message', handler);
-    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
-    return () => window.removeEventListener('message', handler);
-  }, []);
-
-  const setTweak = (k, v) => {
-    setTweaksState(t => {
-      const next = { ...t, [k]: v };
-      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
-      return next;
-    });
-  };
-
-  const handleToggleOwned = (id) => {
-    setTracks(ts => ts.map(t => t.id === id ? { ...t, owned: !t.owned } : t));
-  };
-
-  const handleLog = (newTrack) => {
-    setTracks(ts => [newTrack, ...ts]);
-    setToast('Logged · ' + newTrack.title);
-    setTimeout(() => setToast(null), 2400);
-  };
-
-  const handleInboxUpdate = (id, patch) => {
-    setInbox(items => items.map(t => t.id === id ? { ...t, ...patch } : t));
-  };
-  const handleInboxDismiss = (id) => {
-    setInbox(items => items.filter(t => t.id !== id));
-  };
-  const handleInboxPromote = (id) => {
-    const item = inbox.find(t => t.id === id);
-    if (!item || !item.source) return;
-    const promoted = {
-      ...item,
-      id: 'trk-' + Date.now(),
-      dateHeard: item.dateHeard || new Date().toISOString().slice(0, 10),
-      notes: '',
-      _promoted: true,
-      _fromIntegration: item.integration,
-    };
-    setTracks(ts => [promoted, ...ts]);
-    setInbox(items => items.filter(t => t.id !== id));
-    setToast('Moved to Crate · ' + item.title);
-    setTimeout(() => setToast(null), 2400);
-  };
-
-  const handleCreatePlaylist = ({ name, description }) => {
-    const pl = {
-      id: 'pl-' + Date.now(),
-      name,
-      description,
-      trackIds: [],
-      createdAt: new Date().toISOString(),
-    };
-    setPlaylists(ps => [...ps, pl]);
-    setToast('Created · ' + name);
-    setTimeout(() => setToast(null), 2400);
-  };
-
-  const handleDeletePlaylist = (id) => {
-    setPlaylists(ps => ps.filter(p => p.id !== id));
-  };
-
-  const handleAddTrackToPlaylist = (playlistId, trackId) => {
-    setPlaylists(ps => ps.map(p =>
-      p.id === playlistId && !p.trackIds.includes(trackId)
-        ? { ...p, trackIds: [...p.trackIds, trackId] }
-        : p
-    ));
-  };
-
-  const handleRemoveTrackFromPlaylist = (playlistId, trackId) => {
-    setPlaylists(ps => ps.map(p =>
-      p.id === playlistId
-        ? { ...p, trackIds: p.trackIds.filter(id => id !== trackId) }
-        : p
-    ));
-  };
-
-  const active = tracks.find(t => t.id === activeId);
-
-  return (
-    React.createElement('div', { className: 'app' },
-      React.createElement('header', { className: 'brand' },
-        React.createElement('div', { className: 'brand-mark' },
-          React.createElement('span', { className: 'word' }, 'Crate', React.createElement('span', { className: 'dot' })),
-          React.createElement('span', { className: 'sub' }, 'Music curation · est. 2026')
-        ),
-        React.createElement('nav', { className: 'top-nav' },
-          React.createElement('button', { className: 'nav-tab ' + (view === 'crate' ? 'on' : ''), onClick: () => setView('crate') },
-            'The Crate ', React.createElement('span', { className: 'n' }, tracks.length)
-          ),
-          React.createElement('button', { className: 'nav-tab ' + (view === 'inbox' ? 'on' : ''), onClick: () => setView('inbox') },
-            'Inbox ', inbox.length > 0 && React.createElement('span', { className: 'n pulse' }, inbox.length)
-          ),
-          React.createElement('button', { className: 'nav-tab ' + (view === 'playlists' ? 'on' : ''), onClick: () => setView('playlists') },
-            'Collections ', React.createElement('span', { className: 'n' }, playlists.length)
-          )
-        ),
-        React.createElement('div', { className: 'brand-meta' },
-          React.createElement('span', null, React.createElement('b', null, tracks.length), ' logged'),
-          React.createElement('span', null, React.createElement('b', null, inbox.length), ' pending'),
-          React.createElement('span', { style: { color: 'var(--accent)' } }, '●  Online')
-        )
-      ),
-      view === 'crate' ? React.createElement(React.Fragment, null,
-        React.createElement(window.FormPanel, { layout: tweaks.layout, onLog: handleLog }),
-        React.createElement(window.Library, { tracks, activeId, onSelect: setActiveId, filter, setFilter })
-      ) : view === 'inbox' ? React.createElement(window.Inbox, {
-        items: inbox, onPromote: handleInboxPromote, onDismiss: handleInboxDismiss, onUpdate: handleInboxUpdate
-      }) : React.createElement(window.Playlists, {
-        tracks, playlists,
-        onCreatePlaylist: handleCreatePlaylist,
-        onDeletePlaylist: handleDeletePlaylist,
-        onAddTrack: handleAddTrackToPlaylist,
-        onRemoveTrack: handleRemoveTrackFromPlaylist,
-      }),
-      React.createElement(window.Drawer, { track: active, onClose: () => setActiveId(null), onToggleOwned: handleToggleOwned }),
-      React.createElement('div', { className: 'tweaks ' + (tweaksOpen ? 'on' : '') },
-        React.createElement('div', { className: 'tweaks-head' },
-          React.createElement('span', null, 'Tweaks'),
-          React.createElement('button', { onClick: () => setTweaksOpen(false), style: { border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 14 } }, '×')
-        ),
-        React.createElement('div', { className: 'tweaks-body' },
-          React.createElement('div', { className: 't-field' },
-            React.createElement('div', { className: 't-lbl' }, 'Typography'),
-            React.createElement('div', { className: 't-seg' },
-              [['sans','Sans'],['serif','Serif'],['mono','Mono']].map(([v,l]) =>
-                React.createElement('button', { key: v, 'aria-pressed': tweaks.font === v, onClick: () => setTweak('font', v) }, l)
-              )
-            )
-          ),
-          React.createElement('div', { className: 't-field' },
-            React.createElement('div', { className: 't-lbl' }, 'Density'),
-            React.createElement('div', { className: 't-seg' },
-              [['compact','Compact'],['cozy','Cozy']].map(([v,l]) =>
-                React.createElement('button', { key: v, 'aria-pressed': tweaks.density === v, onClick: () => setTweak('density', v) }, l)
-              )
-            )
-          ),
-          React.createElement('div', { className: 't-field' },
-            React.createElement('div', { className: 't-lbl' }, 'Form layout'),
-            React.createElement('div', { className: 't-seg' },
-              [['stacked','Stacked'],['chat','Chat'],['fast','Fast']].map(([v,l]) =>
-                React.createElement('button', { key: v, 'aria-pressed': tweaks.layout === v, onClick: () => setTweak('layout', v) }, l)
-              )
-            )
-          )
-        )
-      ),
-      React.createElement('div', { className: 'toast ' + (toast ? 'on' : '') },
-        React.createElement('span', { className: 'ok' }, '✓'), toast
-      )
-    )
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+// quick lookup
+window.SOURCE = Object.fromEntries(window.SOURCES.map(s => [s.id, s]));
