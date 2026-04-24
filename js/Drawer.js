@@ -39,8 +39,7 @@ function EditableField({ value, onSave, mono }) {
       style={{cursor:'pointer', display:'flex', alignItems:'center', gap:6}}
     >
       <span className={'v' + (mono ? ' mono' : '')}>{value || '—'}</span>
-      <span style={{fontSize:10, color:'var(--ink-4)', fontFamily:'var(--mono)', opacity:0}}} className="edit-hint">✎</span>
-    </div>
+ <span style={{fontSize:10, color:'var(--ink-4)', fontFamily:'var(--mono)', opacity:0}} className="edit-hint">✎</span>    </div>
   );
 }
 
