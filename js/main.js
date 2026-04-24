@@ -181,8 +181,7 @@ const handleUpdateTrack = (id, field, value) => {
         onAddTrack: handleAddTrackToPlaylist,
         onRemoveTrack: handleRemoveTrackFromPlaylist,
       }),
-      React.createElement(window.Drawer, { track: active, onClose: () => setActiveId(null), onToggleOwned: handleToggleOwned }),
-      React.createElement('div', { className: 'tweaks ' + (tweaksOpen ? 'on' : '') },
+React.createElement(window.Drawer, { track: active, onClose: () => setActiveId(null), onToggleOwned: handleToggleOwned, onUpdateTrack: handleUpdateTrack }),      React.createElement('div', { className: 'tweaks ' + (tweaksOpen ? 'on' : '') },
         React.createElement('div', { className: 'tweaks-head' },
           React.createElement('span', null, 'Tweaks'),
           React.createElement('button', { onClick: () => setTweaksOpen(false), style: { border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 14 } }, '×')
