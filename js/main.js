@@ -76,7 +76,11 @@ function App() {
   const handleToggleOwned = (id) => {
     setTracks(ts => ts.map(t => t.id === id ? { ...t, owned: !t.owned } : t));
   };
-
+  
+const handleUpdateTrack = (id, field, value) => {
+    setTracks(ts => ts.map(t => t.id === id ? { ...t, [field]: value } : t));
+  };
+  
   const handleLog = (newTrack) => {
     setTracks(ts => [newTrack, ...ts]);
     setToast('Logged · ' + newTrack.title);
