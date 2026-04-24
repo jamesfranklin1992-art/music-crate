@@ -1,4 +1,4 @@
-// Drawer.jsx — track detail drawer
+// Drawer.js — track detail drawer
 
 function Drawer({ track, onClose, onToggleOwned }) {
   if (!track) {
@@ -14,15 +14,6 @@ function Drawer({ track, onClose, onToggleOwned }) {
   const catno = track.label && track.year
     ? `${track.label.replace(/[^A-Z]/gi,'').slice(0,4).toUpperCase() || 'CAT'}-${String(track.year).slice(2)}${(parseInt(track.id.replace(/\D/g,''))%900+100)}`
     : '—';
-
-  // Price analysis
-  const priceEntries = window.STORES.map(store => {
-    const p = track.prices?.[store.id];
-    const val = p == null ? null : (typeof p === 'string' ? parseFloat(p) : p);
-    return { ...store, price: val, raw: p };
-  });
-  const available = priceEntries.filter(p => p.price != null);
-  const best = available.length > 0 ? available.reduce((a,b) => a.price < b.price ? a : b).id : null;
 
   return (
     <>
@@ -100,43 +91,43 @@ function Drawer({ track, onClose, onToggleOwned }) {
             </>
           )}
 
-          {/* Download / price compare */}
+          {/* Where to buy */}
           <div className="section-h">
             Where to buy
-            <span className="mini">{available.length} / {priceEntries.length} AVAILABLE</span>
+            <span className="mini">SEARCH STORES</span>
           </div>
           <div className="prices">
-         {(() => {
-  const query = encodeURIComponent(`${track.artist} ${track.title}`);
-  const stores = [
-    { id: 'discogs',  name: 'Discogs',  mark: 'D', fmt: 'Vinyl',         url: `https://www.discogs.com/search/?q=${query}&type=release` },
-    { id: 'bandcamp', name: 'Bandcamp', mark: 'B', fmt: 'Digital / WAV', url: `https://bandcamp.com/search?q=${query}` },
-    { id: 'beatport', name: 'Beatport', mark: 'BP', fmt: 'Digital / MP3', url: `https://www.beatport.com/search?q=${query}` },
-  ];
-  return stores.map(s => (
-    <div key={s.id} className="price-row">
-      <div className="store">
-        <div className="mark">{s.mark}</div>
-        <div>
-          <div className="name">{s.name}</div>
-          <span className="fmt">{s.fmt}</span>
-        </div>
-      </div>
-      
-        href={s.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn sm"
-        style={{textDecoration:'none'}}
-      >
-        Search →
-      </a>
-    </div>
-  ));
-})()}
+            {(() => {
+              const query = encodeURIComponent(`${track.artist} ${track.title}`);
+              const stores = [
+                { id: 'discogs',  name: 'Discogs',  mark: 'D',  fmt: 'Vinyl',         url: `https://www.discogs.com/search/?q=${query}&type=release` },
+                { id: 'bandcamp', name: 'Bandcamp', mark: 'B',  fmt: 'Digital / WAV', url: `https://bandcamp.com/search?q=${query}` },
+                { id: 'beatport', name: 'Beatport', mark: 'BP', fmt: 'Digital / MP3', url: `https://www.beatport.com/search?q=${query}` },
+              ];
+              return stores.map(s => (
+                <div key={s.id} className="price-row">
+                  <div className="store">
+                    <div className="mark">{s.mark}</div>
+                    <div>
+                      <div className="name">{s.name}</div>
+                      <span className="fmt">{s.fmt}</span>
+                    </div>
+                  </div>
+                  
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn sm"
+                    style={{textDecoration:'none'}}
+                  >
+                    Search →
+                  </a>
+                </div>
+              ));
+            })()}
           </div>
 
-          {/* Related / meta */}
+          {/* Related by label */}
           <div className="section-h">
             Related by label
             <span className="mini">ON {track.label.toUpperCase()}</span>
