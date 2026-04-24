@@ -1,4 +1,48 @@
-// Drawer.js — track detail drawer
+// Drawer.js — track detail drawer with inline editing
+
+function EditableField({ value, onSave, mono }) {
+  var [editing, setEditing] = React.useState(false);
+  var [draft, setDraft] = React.useState(value || '');
+
+  var commit = function() {
+    setEditing(false);
+    if (draft !== value) onSave(draft);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={function(e) { setDraft(e.target.value); }}
+        onBlur={commit}
+        onKeyDown={function(e) { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
+        style={{
+          fontFamily: mono ? 'var(--mono)' : 'var(--font-display)',
+          fontSize: mono ? 14 : 15,
+          color: 'var(--ink)',
+          background: 'transparent',
+          border: 'none',
+          borderBottom: '1px solid var(--accent)',
+          outline: 'none',
+          width: '100%',
+          padding: '2px 0',
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      onClick={function() { setDraft(value || ''); setEditing(true); }}
+      title="Click to edit"
+      style={{cursor:'pointer', display:'flex', alignItems:'center', gap:6}}
+    >
+      <span className={'v' + (mono ? ' mono' : '')}>{value || '—'}</span>
+      <span style={{fontSize:10, color:'var(--ink-4)', fontFamily:'var(--mono)', opacity:0}}} className="edit-hint">✎</span>
+    </div>
+  );
+}
 
 function WhereToBuy({ track }) {
   var query = encodeURIComponent(track.artist + ' ' + track.title);
@@ -51,7 +95,7 @@ function RelatedList({ track }) {
   );
 }
 
-function Drawer({ track, onClose, onToggleOwned }) {
+function Drawer({ track, onClose, onToggleOwned, onUpdateTrack }) {
   if (!track) {
     return (
       <div>
@@ -65,6 +109,10 @@ function Drawer({ track, onClose, onToggleOwned }) {
   var catno = track.label && track.year
     ? track.label.replace(/[^A-Z]/gi,'').slice(0,4).toUpperCase() + '-' + String(track.year).slice(2) + ((parseInt(track.id.replace(/\D/g,''))%900)+100)
     : '—';
+
+  var save = function(field) {
+    return function(val) { onUpdateTrack(track.id, field, val); };
+  };
 
   return (
     <div>
@@ -85,22 +133,30 @@ function Drawer({ track, onClose, onToggleOwned }) {
         </div>
 
         <div className="drawer-body">
+          <div className="section-h" style={{marginTop:0}}>
+            Metadata
+            <span className="mini">CLICK ANY FIELD TO EDIT</span>
+          </div>
           <div className="meta-grid">
             <div>
               <div className="k">Release year</div>
-              <div className="v mono">{track.year || '—'}</div>
+              <EditableField value={track.year ? String(track.year) : ''} onSave={save('year')} mono={true} />
             </div>
             <div>
               <div className="k">Label</div>
-              <div className="v">{track.label}</div>
+              <EditableField value={track.label} onSave={save('label')} mono={false} />
             </div>
             <div>
               <div className="k">Genre / Style</div>
-              <div className="v">{track.genre}</div>
+              <EditableField value={track.genre} onSave={save('genre')} mono={false} />
             </div>
             <div>
-              <div className="k">BPM · Key</div>
-              <div className="v mono">{track.bpm || '—'}{track.key ? ' · ' + track.key : ''}</div>
+              <div className="k">BPM</div>
+              <EditableField value={track.bpm ? String(track.bpm) : ''} onSave={save('bpm')} mono={true} />
+            </div>
+            <div>
+              <div className="k">Key</div>
+              <EditableField value={track.key || ''} onSave={save('key')} mono={true} />
             </div>
           </div>
 
