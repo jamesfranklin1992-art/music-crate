@@ -1038,7 +1038,10 @@ textarea { resize: vertical; min-height: 40px; line-height: 1.4; }
   width: 28px;
   text-align: center;
 }
-.inbox-main-col { flex: 1; min-width: 0; }
+
+/* CHANGED: Added a wrapper and icon element for the Source column */
+.inbox-main-col { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+
 .inbox-title {
   font-family: var(--font-display);
   font-size: 15px;
@@ -1048,26 +1051,14 @@ textarea { resize: vertical; min-height: 40px; line-height: 1.4; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* CHANGED: Moved 'sep' and 'artist' classes to the title container for consistent single-line format */
 .inbox-sep { color: var(--ink-4); margin: 0 6px; }
 .inbox-artist { color: var(--ink-2); font-style: italic; font-weight: 400; }
-.inbox-yr {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink-4);
-  margin-left: 6px;
-  font-weight: 400;
-}
-.inbox-meta {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--ink-3);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 3px;
-  display: flex; gap: 5px; flex-wrap: wrap;
-}
-.inbox-meta .dot { opacity: 0.5; }
-.inbox-meta .ago { color: var(--accent); font-weight: 600; }
+
+/* CHANGED: 'inbox-yr' and 'inbox-meta' classes are no longer used for Source or Mood columns */
+
+/* --- END OF CHANGED SECTION --- */
 
 .pill {
   font-family: var(--mono);
