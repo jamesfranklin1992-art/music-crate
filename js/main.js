@@ -156,9 +156,14 @@ const handleUpdateTrack = (id, field, value) => {
           React.createElement('button', { className: 'nav-tab ' + (view === 'crate' ? 'on' : ''), onClick: () => setView('crate') },
             'The Crate ', React.createElement('span', { className: 'n' }, tracks.length)
           ),
-          React.createElement('button', { className: 'nav-tab ' + (view === 'inbox' ? 'on' : ''), onClick: () => setView('inbox') },
-            'Inbox ', inbox.length > 0 && React.createElement('span', { className: 'n pulse' }, inbox.length)
-          ),
+         React.createElement('button', {
+  className: 'nav-tab',
+  disabled: true,
+  title: 'Coming Soon',
+  style: { opacity: 0.4, cursor: 'not-allowed' }
+},
+  'Inbox ', React.createElement('span', { style: { fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', marginLeft: 6 } }, 'Coming Soon')
+),
           React.createElement('button', { className: 'nav-tab ' + (view === 'playlists' ? 'on' : ''), onClick: () => setView('playlists') },
             'Collections ', React.createElement('span', { className: 'n' }, playlists.length)
           )
