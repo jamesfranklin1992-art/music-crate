@@ -139,14 +139,12 @@ function Library({ tracks, activeId, onSelect, filter, setFilter }) {
                     <span className="yr">· {t.artist}{t.year ? ' · ' + t.year : ''}</span>
                   </td>
                   <td className="label-cell">{t.label}</td>
-                  <td style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+                 <td style={{ fontSize: 13, color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
                     {t.source && window.SOURCE[t.source] ? window.SOURCE[t.source].glyph + ' ' + window.SOURCE[t.source].label : '—'}
                   </td>
                   <td className="num">{t.bpm || '—'}</td>
-                  <td style={{ fontSize: 11 }}>
-                    {t.mood ? t.mood.split(',').filter(Boolean).map(function(m) {
-                      return React.createElement('span', { key: m, className: 'chip', style: { marginRight: 4, fontSize: 10 } }, m);
-                    }) : '—'}
+                  <td style={{ fontSize: 13, color: 'var(--ink-2)' }}>
+                    {t.mood ? t.mood.split(',').filter(Boolean).join(', ') : '—'}
                   </td>
                   <td className="num" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
                   </td>
