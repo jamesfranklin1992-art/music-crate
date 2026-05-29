@@ -96,7 +96,7 @@ function Library({ tracks, activeId, onSelect, filter, setFilter }) {
       <div className="lib-table">
         <table className="tbl">
           <thead>
-            <tr>
+              <tr>
               <th style={{ width: 32 }}>#</th>
               <th style={thStyle} onClick={function(){ toggleSort('title'); }}>
                 Title · Artist {arrow('title')}
@@ -104,9 +104,13 @@ function Library({ tracks, activeId, onSelect, filter, setFilter }) {
               <th style={Object.assign({ width: 150 }, thStyle)} onClick={function(){ toggleSort('label'); }}>
                 Label {arrow('label')}
               </th>
+              <th style={Object.assign({ width: 100 }, thStyle)} onClick={function(){ toggleSort('source'); }}>
+                Source {arrow('source')}
+              </th>
               <th style={Object.assign({ width: 60, textAlign: 'right' }, thStyle)} onClick={function(){ toggleSort('bpm'); }}>
                 BPM {arrow('bpm')}
               </th>
+              <th style={{ width: 140 }}>Mood / Tags</th>
               <th style={Object.assign({ width: 90, textAlign: 'right' }, thStyle)} onClick={function(){ toggleSort('dateHeard'); }}>
                 Heard {arrow('dateHeard')}
               </th>
@@ -135,9 +139,16 @@ function Library({ tracks, activeId, onSelect, filter, setFilter }) {
                     <span className="yr">· {t.artist}{t.year ? ' · ' + t.year : ''}</span>
                   </td>
                   <td className="label-cell">{t.label}</td>
+                  <td style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+                    {t.source && window.SOURCE[t.source] ? window.SOURCE[t.source].glyph + ' ' + window.SOURCE[t.source].label : '—'}
+                  </td>
                   <td className="num">{t.bpm || '—'}</td>
+                  <td style={{ fontSize: 11 }}>
+                    {t.mood ? t.mood.split(',').filter(Boolean).map(function(m) {
+                      return React.createElement('span', { key: m, className: 'chip', style: { marginRight: 4, fontSize: 10 } }, m);
+                    }) : '—'}
+                  </td>
                   <td className="num" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
-                    {window.formatDate ? window.formatDate(t.dateHeard) : t.dateHeard}
                   </td>
                   <td>
                     {t.owned && React.createElement('span', { style: { fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)' } }, '✓')}
