@@ -73,23 +73,23 @@ function Library({ tracks, activeId, onSelect, filter, setFilter }) {
           />
         </div>
         <div className="chips">
-          {window.SOURCES.map(function(s) {
+   {window.SOURCES.map(function(s) {
             return React.createElement('button', {
               key: s.id,
               className: 'chip',
               'aria-pressed': filter.source === s.id,
               onClick: function(){ setFilter(function(f){ return Object.assign({}, f, { source: filter.source === s.id ? 'all' : s.id }); }); }
-            }, s.glyph, ' ', s.label);
+            }, s.label);
           })}
         </div>
-        <label className="own-check">
+   <label className="own-check">
           <input
             type="checkbox"
             checked={filter.owned === 'owned'}
             onChange={function(e){ setFilter(function(f){ return Object.assign({}, f, { owned: e.target.checked ? 'owned' : 'all' }); }); }}
           />
           <span className="box">{filter.owned === 'owned' ? '✓' : ''}</span>
-          <span className="txt">Owned only</span>
+          <span className="txt">Owned</span>
         </label>
       </div>
 
