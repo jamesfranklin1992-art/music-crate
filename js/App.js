@@ -1,8 +1,11 @@
-// App.js — Crate music curation prototype
+// App.jsx — Crate music curation prototype
 // Renders form panel + library + drawer + tweaks
 
 const { useState, useEffect, useMemo, useRef } = React;
 
+// ─────────────────────────────────────────────────
+// Tweaks defaults (must stay a single parsable JSON block)
+// ─────────────────────────────────────────────────
 const TWEAKS_DEFAULTS = /*EDITMODE-BEGIN*/{
   "font": "sans",
   "density": "compact",
@@ -10,51 +13,61 @@ const TWEAKS_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const STORES = [
-  { id: 'discogs',  name: 'Discogs',  fmt: 'Vinyl',        mark: 'D' },
-  { id: 'bandcamp', name: 'Bandcamp', fmt: 'Digital / WAV', mark: 'B' },
-  { id: 'beatport', name: 'Beatport', fmt: 'Digital / MP3', mark: 'BP' },
+  {
+    id: 'discogs',  name: 'Discogs',  fmt: 'Vinyl',        mark: 'D',
+    buildUrl: (track) => `https://www.discogs.com/search/?q=${encodeURIComponent(track.artist + ' ' + track.title)}&type=release`,
+  },
+  {
+    id: 'bandcamp', name: 'Bandcamp', fmt: 'Digital / WAV', mark: 'B',
+    buildUrl: (track) => `https://bandcamp.com/search?q=${encodeURIComponent(track.artist + ' ' + track.title)}`,
+  },
+  {
+    id: 'beatport', name: 'Beatport', fmt: 'Digital / MP3', mark: 'BP',
+    buildUrl: (track) => `https://www.beatport.com/search?q=${encodeURIComponent(track.artist + ' ' + track.title)}`,
+  },
 ];
 
+// ─────────────────────────────────────────────────
+// Form panel
+// ─────────────────────────────────────────────────
 function FormPanel({ layout, onLog }) {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [source, setSource] = useState('mix');
   const [sourceDetail, setSourceDetail] = useState('');
   const [moods, setMoods] = useState([]);
-  const [customMoods, setCustomMoods] = useState([]);
+  const [customMoods, setCustomMoods] = useState([]); // user-added
   const [moodDraft, setMoodDraft] = useState('');
   const [owned, setOwned] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0,10));
-  const [lookup, setLookupState] = useState(null);
+  const [lookup, setLookupState] = useState(null); // {state: 'idle'|'loading'|'found', data?}
   const [expanded, setExpanded] = useState(false);
   const [chatStep, setChatStep] = useState(0);
 
-  // Real Discogs API lookup
+  // Fake Discogs/MusicBrainz lookup
   const lookupRef = useRef();
   useEffect(() => {
     clearTimeout(lookupRef.current);
     if (!title || !artist) { setLookupState(null); return; }
     setLookupState({ state: 'loading' });
-    lookupRef.current = setTimeout(async () => {
-      try {
-        const query = encodeURIComponent(`${title} ${artist}`);
-        const res = await fetch(
-          `https://api.discogs.com/database/search?q=${query}&type=release&per_page=1`,
-          { headers: { 'User-Agent': 'CrateApp/1.0' } }
-        );
-        const data = await res.json();
-        const result = data.results?.[0];
-        if (result) {
-          const year = result.year || null;
-          const label = result.label?.[0] || '—';
-          const genre = result.genre?.[0] || result.style?.[0] || '—';
-          const catno = result.catno || '—';
-          setLookupState({ state: 'found', data: { year, label, genre, bpm: null, key: null, catno } });
-        } else {
-          setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
-        }
-      } catch (e) {
-        setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
+    lookupRef.current = setTimeout(() => {
+      // Try to find match in our data
+      const match = window.TRACKS.find(t =>
+        t.title.toLowerCase().includes(title.toLowerCase()) &&
+        t.artist.toLowerCase().includes(artist.toLowerCase())
+      );
+      if (match) {
+        setLookupState({ state: 'found', data: {
+          year: match.year, label: match.label, genre: match.genre,
+          bpm: match.bpm, key: match.key, catno: generateCatno(match.label, match.year),
+        }});
+      } else {
+        // Fabricate plausible metadata
+        setLookupState({ state: 'found', data: {
+          year: 1985 + Math.floor(Math.random()*40),
+          label: ['Unknown', 'Private Press'][Math.floor(Math.random()*2)],
+          genre: '—', bpm: null, key: null, catno: '—',
+        }});
       }
     }, 900);
     return () => clearTimeout(lookupRef.current);
@@ -107,6 +120,7 @@ function FormPanel({ layout, onLog }) {
     setLookupState(null);
   };
 
+  // Chat-mode steps
   const chatFields = ['title', 'artist', 'source', 'sourceDetail', 'moods', 'date'];
   const totalSteps = chatFields.length;
 
@@ -200,17 +214,19 @@ function FormPanel({ layout, onLog }) {
 
       {chatFields.map(name => renderField(name))}
 
+      {/* expand-more only in fast layout */}
       {layout === 'fast' && (
         <button className="expand-more" onClick={()=>setExpanded(e=>!e)}>
           + Add mood / date
         </button>
       )}
 
+      {/* Auto-lookup card — hidden in chat layout */}
       {layout !== 'chat' && (
         <div className={`lookup ${lookup?.state==='found'?'has':''}`}>
           {!lookup && <span>Enter title & artist — metadata auto-fetched from Discogs</span>}
           {lookup?.state==='loading' && (
-            <span className="src"><span className="pulse"></span>Searching Discogs…</span>
+            <span className="src"><span className="pulse"></span>Searching Discogs + MusicBrainz…</span>
           )}
           {lookup?.state==='found' && (
             <>
@@ -225,12 +241,14 @@ function FormPanel({ layout, onLog }) {
         </div>
       )}
 
+      {/* Chat nav */}
       <div className="chat-nav">
         <button className="btn ghost sm" disabled={chatStep===0} onClick={()=>setChatStep(s=>Math.max(0,s-1))}>← Back</button>
         {chatStep < totalSteps-1 && <button className="btn sm" onClick={()=>setChatStep(s=>s+1)}>Next →</button>}
         {chatStep === totalSteps-1 && <button className="btn sm" disabled={!canSubmit} onClick={submit}>✓ Log track</button>}
       </div>
 
+      {/* Standard submit */}
       <div className="submit-row">
         <span className="hint"><span className="kbd">⌘</span> <span className="kbd">↵</span> to save</span>
         <button className="btn" disabled={!canSubmit} onClick={submit}>Log track →</button>
