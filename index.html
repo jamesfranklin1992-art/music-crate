@@ -20,13 +20,68 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  
+
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Data -->
+
+  <!-- Data (constants + empty TRACKS placeholder) -->
   <script src="js/data.js"></script>
   <script src="js/inbox-data.js"></script>
+
+  <!-- Supabase fetch — populates window.TRACKS before React mounts -->
+  <script>
+    (function () {
+      const SUPABASE_URL = 'https://hccuqyudoynaakzjklco.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjY3VxeXVkb3luYWFremprbGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMTAxNzEsImV4cCI6MjA5NTU4NjE3MX0.WGPEwVu8Jwz-DCCG4nLDhV4zMa14TqnTH-HXxkVgOtI';
+
+      window._supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // Fetches all tracks then fires a custom event so main.js knows data is ready
+      window._loadTracks = async function () {
+        try {
+          const { data, error } = await window._supabase
+            .from('tracks')
+            .select('*')
+            .order('date_heard', { ascending: false });
+
+          if (error) throw error;
+
+          // Map Supabase column names to the shape the app expects.
+          // If your column names differ, adjust the left-hand side of each line.
+          window.TRACKS = (data || []).map(row => ({
+            id:           row.id,
+            title:        row.title,
+            artist:       row.artist,
+            year:         row.year,
+            label:        row.label        || '—',
+            genre:        row.genre        || '—',
+            bpm:          row.bpm          ?? null,
+            key:          row.key          ?? null,
+            source:       row.source       || 'mix',
+            sourceDetail: row.source_detail || '',
+            mood:         row.mood         || '',
+            dateHeard:    row.date_heard   || '',
+            notes:        row.notes        || '',
+            owned:        row.owned        ?? false,
+            prices: {
+              discogs:  row.price_discogs  ?? null,
+              bandcamp: row.price_bandcamp ?? null,
+              beatport: row.price_beatport ?? null,
+            },
+          }));
+        } catch (err) {
+          console.error('[Crate] Failed to load tracks from Supabase:', err);
+          window.TRACKS = [];
+        }
+
+        // Signal that data is ready — main.js listens for this before mounting
+        window._crateReady = true;
+        document.dispatchEvent(new Event('crate:ready'));
+      };
+
+      window._loadTracks();
+    })();
+  </script>
 
   <!-- Components (order matters — dependencies first) -->
   <script type="text/babel" src="js/App.js"></script>
