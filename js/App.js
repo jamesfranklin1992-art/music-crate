@@ -273,4 +273,4 @@ function generateCatno(label, year) {
   return `${pre}-${String(year).slice(2)}${Math.floor(Math.random()*999).toString().padStart(3,'0')}`;
 }
 
-Object.assign(window, { FormPanel, STORES });
+Object.assign(window, { FormPanel, STORES, TWEAKS_DEFAULTS });
