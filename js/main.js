@@ -81,6 +81,11 @@ function App() {
     setTracks(ts => ts.map(t => t.id === id ? { ...t, owned: !t.owned } : t));
   };
 
+  const handleUpdateTrack = (updated) => {
+    setTracks(ts => ts.map(t => t.id === updated.id ? updated : t));
+    window.TRACKS = window.TRACKS.map(t => t.id === updated.id ? updated : t);
+  };
+
   const handleLog = (newTrack) => {
     setTracks(ts => [newTrack, ...ts]);
     setToast('Logged · ' + newTrack.title);
@@ -181,7 +186,7 @@ function App() {
         onAddTrack: handleAddTrackToPlaylist,
         onRemoveTrack: handleRemoveTrackFromPlaylist,
       }),
-      React.createElement(window.Drawer, { track: active, onClose: () => setActiveId(null), onToggleOwned: handleToggleOwned }),
+      React.createElement(window.Drawer, { track: active, onClose: () => setActiveId(null), onToggleOwned: handleToggleOwned, onUpdateTrack: handleUpdateTrack }),
       React.createElement('div', { className: 'tweaks ' + (tweaksOpen ? 'on' : '') },
         React.createElement('div', { className: 'tweaks-head' },
           React.createElement('span', null, 'Tweaks'),
