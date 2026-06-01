@@ -39,7 +39,11 @@ function usePersisted(storageKey, fallback) {
 // ──────────────────────────────────────────────────────────
 
 function App() {
-  const [tracks, setTracks]       = usePersisted(STORAGE_KEYS.tracks,    window.TRACKS);
+  // Tracks come from Supabase (loaded into window.TRACKS before mount) — not localStorage
+  const [tracks, setTracks]       = React.useState(() => {
+    localStorage.removeItem(STORAGE_KEYS.tracks); // clear any stale demo data
+    return window.TRACKS || [];
+  });
   const [playlists, setPlaylists] = usePersisted(STORAGE_KEYS.playlists, []);
   const [tweaks, setTweaksState]  = usePersisted(STORAGE_KEYS.tweaks,    window.TWEAKS_DEFAULTS);
   const [inbox, setInbox]         = React.useState(() => window.INBOX);  // inbox is session-only
