@@ -13,6 +13,16 @@ window.MOODS = [
   'euphoric','dubby','acid','soulful','stripped','party'
 ];
 
+// Populated from Supabase at runtime
 window.TRACKS = [];
 
+// quick lookup
 window.SOURCE = Object.fromEntries(window.SOURCES.map(s => [s.id, s]));
+
+// Utility — defined here so it's available synchronously before any Babel scripts
+window.formatDate = function(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+};
