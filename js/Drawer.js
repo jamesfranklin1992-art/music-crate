@@ -135,7 +135,7 @@ function Drawer({ track, onClose, onToggleOwned }) {
           {/* Related / meta */}
           <div className="section-h">
             Related by label
-            <span className="mini">ON {track.label.toUpperCase()}</span>
+            <span className="mini">ON {(track.label || '—').toUpperCase()}</span>
           </div>
           <RelatedList track={track} />
         </div>
