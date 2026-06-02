@@ -113,9 +113,7 @@ function App() {
       date_heard:     newTrack.dateHeard,
       notes:          newTrack.notes,
       owned:          newTrack.owned,
-      price_discogs:  newTrack.prices?.discogs  ?? null,
-      price_bandcamp: newTrack.prices?.bandcamp ?? null,
-      price_beatport: newTrack.prices?.beatport ?? null,
+
     });
 
     if (error) {
