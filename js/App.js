@@ -40,7 +40,7 @@ useEffect(() => {
       const query = encodeURIComponent(`${title} ${artist}`);
       const res = await fetch(
         `https://api.discogs.com/database/search?q=${query}&type=release&per_page=1`,
-        { headers: { 'User-Agent': 'CrateApp/1.0' } }
+        { headers: { 'User-Agent': 'CrateApp/1.0', 'Authorization': 'Discogs token=LetcheUbtOhLuqncYBHqVKXScpdZfIQIxRJLTnKs' } }
       );
       const data = await res.json();
       const result = data.results?.[0];
