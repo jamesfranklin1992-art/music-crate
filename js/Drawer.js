@@ -25,14 +25,12 @@ function Drawer({ track, onClose, onToggleOwned, onUpdateTrack }) {
     ? `${track.label.replace(/[^A-Z]/gi,'').slice(0,4).toUpperCase() || 'CAT'}-${String(track.year).slice(2)}${(parseInt(track.id.replace(/\D/g,''))%900+100)}`
     : '—';
 
-  // Price analysis
-  const priceEntries = window.STORES.map(store => {
-    const p = track.prices?.[store.id];
-    const val = p == null ? null : (typeof p === 'string' ? parseFloat(p) : p);
-    return { ...store, price: val, raw: p };
-  });
-  const available = priceEntries.filter(p => p.price != null);
-  const best = available.length > 0 ? available.reduce((a,b) => a.price < b.price ? a : b).id : null;
+  // Store search links
+  const SEARCH_STORES = [
+    { name: 'Discogs',  buildUrl: (t) => `https://www.discogs.com/search/?q=${encodeURIComponent(t.artist + ' ' + t.title)}&type=release` },
+    { name: 'Bandcamp', buildUrl: (t) => `https://bandcamp.com/search?q=${encodeURIComponent(t.artist + ' ' + t.title)}` },
+    { name: 'Beatport', buildUrl: (t) => `https://www.beatport.com/search?q=${encodeURIComponent(t.artist + ' ' + t.title)}` },
+  ];
 
   // ── Edit helpers ──────────────────────────────────────────
   const startEditing = () => {
@@ -258,36 +256,16 @@ function Drawer({ track, onClose, onToggleOwned, onUpdateTrack }) {
             </div>
           )}
 
-          {/* Download / price compare */}
-          <div className="section-h" style={{marginTop:24}}>
-            Where to buy
-            <span className="mini">{available.length} / {priceEntries.length} AVAILABLE</span>
-          </div>
-          <div className="prices">
-            {priceEntries.map(p => {
-              const isBest = p.id === best;
-              const unavail = p.price == null;
-              return (
-                <div key={p.id} className={`price-row ${isBest?'best':''} ${unavail?'unavail':''}`}>
-                  <div className="store">
-                    <div className="mark">{p.mark}</div>
-                    <div>
-                      <div className="name">
-                        {p.name}
-                        {isBest && <span className="best-badge">Best</span>}
-                      </div>
-                      <span className="fmt">{p.fmt}</span>
-                    </div>
-                  </div>
-                  <div className="p">{unavail ? 'Not listed' : `$${p.price.toFixed(2)}`}</div>
-                  <button
-                    className="btn sm"
-                    disabled={unavail}
-                    onClick={() => !unavail && window.open(p.buildUrl(track), '_blank', 'noopener')}
-                  >{unavail ? '—' : 'Open →'}</button>
-                </div>
-              );
-            })}
+          {/* Search links */}
+          <div className="section-h" style={{marginTop:24}}>Search</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {SEARCH_STORES.map(s => (
+              <button
+                key={s.name}
+                className="btn sm ghost"
+                onClick={() => window.open(s.buildUrl(track), '_blank', 'noopener')}
+              >{s.name} →</button>
+            ))}
           </div>
 
           {/* Related / meta */}
