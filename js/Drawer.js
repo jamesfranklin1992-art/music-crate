@@ -21,8 +21,11 @@ function Drawer({ track, onClose, onToggleOwned, onUpdateTrack }) {
   }
 
   const src = window.SOURCE[track.source];
-  const catno = track.label && track.year
-    ? `${track.label.replace(/[^A-Z]/gi,'').slice(0,4).toUpperCase() || 'CAT'}-${String(track.year).slice(2)}${(parseInt(track.id.replace(/\D/g,''))%900+100)}`
+  const _label = track.label || '';
+  const _digits = (track.id || '').replace(/\D/g,'');
+  const _num = _digits.length > 0 ? (parseInt(_digits.slice(-6)) % 900 + 100) : Math.floor(Math.random()*900+100);
+  const catno = _label && track.year
+    ? `${_label.replace(/[^A-Z]/gi,'').slice(0,4).toUpperCase() || 'CAT'}-${String(track.year).slice(2)}${_num}`
     : '—';
 
   // Store search links
