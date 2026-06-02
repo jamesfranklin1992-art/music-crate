@@ -93,33 +93,35 @@ function App() {
   };
 
   const handleLog = async (newTrack) => {
-    // Optimistically update UI
+    // Optimistically update UI with a temporary local id
     setTracks(ts => [newTrack, ...ts]);
     setToast('Logged · ' + newTrack.title);
     setTimeout(() => setToast(null), 2400);
 
-    // Persist to Supabase
-    const { error } = await window._supabase.from('tracks').insert({
-      title:          newTrack.title,
-      artist:         newTrack.artist,
-      year:           newTrack.year,
-      label:          newTrack.label,
-      genre:          newTrack.genre,
-      bpm:            newTrack.bpm,
-      key:            newTrack.key,
-      source:         newTrack.source,
-      source_detail:  newTrack.sourceDetail,
-      mood:           newTrack.mood,
-      date_heard:     newTrack.dateHeard,
-      notes:          newTrack.notes,
-      owned:          newTrack.owned,
-
-    });
+    // Persist to Supabase — omit id so Supabase generates its own UUID
+    const { data, error } = await window._supabase.from('tracks').insert({
+      title:         newTrack.title,
+      artist:        newTrack.artist,
+      year:          newTrack.year,
+      label:         newTrack.label,
+      genre:         newTrack.genre,
+      bpm:           newTrack.bpm,
+      key:           newTrack.key,
+      source:        newTrack.source,
+      source_detail: newTrack.sourceDetail,
+      mood:          newTrack.mood,
+      date_heard:    newTrack.dateHeard,
+      notes:         newTrack.notes,
+      owned:         newTrack.owned,
+    }).select('id').single();
 
     if (error) {
       console.error('[Crate] Failed to save new track:', error);
       setToast('⚠ Save failed — check console');
       setTimeout(() => setToast(null), 3000);
+    } else if (data?.id) {
+      // Replace the temporary local id with the real Supabase UUID
+      setTracks(ts => ts.map(t => t.id === newTrack.id ? { ...t, id: data.id } : t));
     }
   };
 
