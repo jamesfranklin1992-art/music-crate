@@ -78,7 +78,13 @@ function App() {
   };
 
   const handleToggleOwned = (id) => {
-    setTracks(ts => ts.map(t => t.id === id ? { ...t, owned: !t.owned } : t));
+    setTracks(ts => ts.map(t => {
+      if (t.id !== id) return t;
+      const owned = !t.owned;
+      window._supabase.from('tracks').update({ owned }).eq('id', id)
+        .then(({ error }) => { if (error) console.error('[Crate] Failed to update owned:', error); });
+      return { ...t, owned };
+    }));
   };
 
   const handleUpdateTrack = (updated) => {
@@ -86,10 +92,37 @@ function App() {
     window.TRACKS = window.TRACKS.map(t => t.id === updated.id ? updated : t);
   };
 
-  const handleLog = (newTrack) => {
+  const handleLog = async (newTrack) => {
+    // Optimistically update UI
     setTracks(ts => [newTrack, ...ts]);
     setToast('Logged · ' + newTrack.title);
     setTimeout(() => setToast(null), 2400);
+
+    // Persist to Supabase
+    const { error } = await window._supabase.from('tracks').insert({
+      title:          newTrack.title,
+      artist:         newTrack.artist,
+      year:           newTrack.year,
+      label:          newTrack.label,
+      genre:          newTrack.genre,
+      bpm:            newTrack.bpm,
+      key:            newTrack.key,
+      source:         newTrack.source,
+      source_detail:  newTrack.sourceDetail,
+      mood:           newTrack.mood,
+      date_heard:     newTrack.dateHeard,
+      notes:          newTrack.notes,
+      owned:          newTrack.owned,
+      price_discogs:  newTrack.prices?.discogs  ?? null,
+      price_bandcamp: newTrack.prices?.bandcamp ?? null,
+      price_beatport: newTrack.prices?.beatport ?? null,
+    });
+
+    if (error) {
+      console.error('[Crate] Failed to save new track:', error);
+      setToast('⚠ Save failed — check console');
+      setTimeout(() => setToast(null), 3000);
+    }
   };
 
   const handleInboxUpdate = (id, patch) => {
