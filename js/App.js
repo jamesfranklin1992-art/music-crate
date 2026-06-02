@@ -29,35 +29,37 @@ function FormPanel({ layout, onLog }) {
   const [expanded, setExpanded] = useState(false);
   const [chatStep, setChatStep] = useState(0);
 
-  // Fake Discogs/MusicBrainz lookup
-  const lookupRef = useRef();
-  useEffect(() => {
-    clearTimeout(lookupRef.current);
-    if (!title || !artist) { setLookupState(null); return; }
-    setLookupState({ state: 'loading' });
-    lookupRef.current = setTimeout(() => {
-      // Try to find match in our data
-      const match = window.TRACKS.find(t =>
-        t.title.toLowerCase().includes(title.toLowerCase()) &&
-        t.artist.toLowerCase().includes(artist.toLowerCase())
+// Real Discogs API lookup
+const lookupRef = useRef();
+useEffect(() => {
+  clearTimeout(lookupRef.current);
+  if (!title || !artist) { setLookupState(null); return; }
+  setLookupState({ state: 'loading' });
+  lookupRef.current = setTimeout(async () => {
+    try {
+      const query = encodeURIComponent(`${title} ${artist}`);
+      const res = await fetch(
+        `https://api.discogs.com/database/search?q=${query}&type=release&per_page=1`,
+        { headers: { 'User-Agent': 'CrateApp/1.0' } }
       );
-      if (match) {
-        setLookupState({ state: 'found', data: {
-          year: match.year, label: match.label, genre: match.genre,
-          bpm: match.bpm, key: match.key, catno: generateCatno(match.label, match.year),
-        }});
+      const data = await res.json();
+      const result = data.results?.[0];
+      if (result) {
+        const year = result.year || null;
+        const label = result.label?.[0] || '—';
+        const genre = result.genre?.[0] || result.style?.[0] || '—';
+        const catno = result.catno || '—';
+        setLookupState({ state: 'found', data: { year, label, genre, bpm: null, key: null, catno } });
       } else {
-        // Fabricate plausible metadata
-        setLookupState({ state: 'found', data: {
-          year: 1985 + Math.floor(Math.random()*40),
-          label: ['Unknown', 'Private Press'][Math.floor(Math.random()*2)],
-          genre: '—', bpm: null, key: null, catno: '—',
-        }});
+        setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
       }
-    }, 900);
-    return () => clearTimeout(lookupRef.current);
-  }, [title, artist]);
-
+    } catch (e) {
+      setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
+    }
+  }, 900);
+  return () => clearTimeout(lookupRef.current);
+}, [title, artist]);
+  
   const toggleMood = (m) => {
     setMoods(ms => ms.includes(m) ? ms.filter(x=>x!==m) : [...ms, m]);
   };
