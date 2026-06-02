@@ -12,21 +12,6 @@ const TWEAKS_DEFAULTS = /*EDITMODE-BEGIN*/{
   "layout": "stacked"
 }/*EDITMODE-END*/;
 
-const STORES = [
-  {
-    id: 'discogs',  name: 'Discogs',  fmt: 'Vinyl',        mark: 'D',
-    buildUrl: (track) => `https://www.discogs.com/search/?q=${encodeURIComponent(track.artist + ' ' + track.title)}&type=release`,
-  },
-  {
-    id: 'bandcamp', name: 'Bandcamp', fmt: 'Digital / WAV', mark: 'B',
-    buildUrl: (track) => `https://bandcamp.com/search?q=${encodeURIComponent(track.artist + ' ' + track.title)}`,
-  },
-  {
-    id: 'beatport', name: 'Beatport', fmt: 'Digital / MP3', mark: 'BP',
-    buildUrl: (track) => `https://www.beatport.com/search?q=${encodeURIComponent(track.artist + ' ' + track.title)}`,
-  },
-];
-
 // ─────────────────────────────────────────────────
 // Form panel
 // ─────────────────────────────────────────────────
@@ -44,36 +29,34 @@ function FormPanel({ layout, onLog }) {
   const [expanded, setExpanded] = useState(false);
   const [chatStep, setChatStep] = useState(0);
 
- // Real Discogs API lookup
-const lookupRef = useRef();
-useEffect(() => {
-  clearTimeout(lookupRef.current);
-  if (!title || !artist) { setLookupState(null); return; }
-  setLookupState({ state: 'loading' });
-  lookupRef.current = setTimeout(async () => {
-    try {
-      const query = encodeURIComponent(`${title} ${artist}`);
-      const res = await fetch(
-        `https://api.discogs.com/database/search?q=${query}&type=release&per_page=1`,
-        { headers: { 'User-Agent': 'CrateApp/1.0' } }
+  // Fake Discogs/MusicBrainz lookup
+  const lookupRef = useRef();
+  useEffect(() => {
+    clearTimeout(lookupRef.current);
+    if (!title || !artist) { setLookupState(null); return; }
+    setLookupState({ state: 'loading' });
+    lookupRef.current = setTimeout(() => {
+      // Try to find match in our data
+      const match = window.TRACKS.find(t =>
+        t.title.toLowerCase().includes(title.toLowerCase()) &&
+        t.artist.toLowerCase().includes(artist.toLowerCase())
       );
-      const data = await res.json();
-      const result = data.results?.[0];
-      if (result) {
-        const year = result.year || null;
-        const label = result.label?.[0] || '—';
-        const genre = result.genre?.[0] || result.style?.[0] || '—';
-        const catno = result.catno || '—';
-        setLookupState({ state: 'found', data: { year, label, genre, bpm: null, key: null, catno } });
+      if (match) {
+        setLookupState({ state: 'found', data: {
+          year: match.year, label: match.label, genre: match.genre,
+          bpm: match.bpm, key: match.key, catno: generateCatno(match.label, match.year),
+        }});
       } else {
-        setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
+        // Fabricate plausible metadata
+        setLookupState({ state: 'found', data: {
+          year: 1985 + Math.floor(Math.random()*40),
+          label: ['Unknown', 'Private Press'][Math.floor(Math.random()*2)],
+          genre: '—', bpm: null, key: null, catno: '—',
+        }});
       }
-    } catch (e) {
-      setLookupState({ state: 'found', data: { year: null, label: '—', genre: '—', bpm: null, key: null, catno: '—' } });
-    }
-  }, 900);
-  return () => clearTimeout(lookupRef.current);
-}, [title, artist]);
+    }, 900);
+    return () => clearTimeout(lookupRef.current);
+  }, [title, artist]);
 
   const toggleMood = (m) => {
     setMoods(ms => ms.includes(m) ? ms.filter(x=>x!==m) : [...ms, m]);
@@ -112,7 +95,6 @@ useEffect(() => {
       dateHeard: date,
       owned,
       notes: '',
-      prices: { discogs: Math.floor(5+Math.random()*30), bandcamp: Math.random()>.5? (1+Math.random()*2).toFixed(2):null, beatport: Math.random()>.5? (2+Math.random()*2).toFixed(2):null },
       _new: true,
     };
     onLog(newTrack);
@@ -275,4 +257,4 @@ function generateCatno(label, year) {
   return `${pre}-${String(year).slice(2)}${Math.floor(Math.random()*999).toString().padStart(3,'0')}`;
 }
 
-Object.assign(window, { FormPanel, STORES, TWEAKS_DEFAULTS });
+Object.assign(window, { FormPanel, TWEAKS_DEFAULTS });
