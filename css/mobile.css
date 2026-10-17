@@ -16,6 +16,12 @@
     display: none !important;
   }
 
+  /* Hide Inbox and Collections navigation on mobile */
+  .top-nav .nav-tab:nth-child(2),
+  .top-nav .nav-tab:nth-child(3) {
+    display: none !important;
+  }
+
   .brand {
     position: static;
     padding: 14px 16px;
