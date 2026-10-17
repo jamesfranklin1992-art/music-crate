@@ -1,0 +1,82 @@
+/* Crate — mobile: form-only layout.
+   Desktop styles remain unchanged. */
+
+@media (max-width: 767px) {
+  .app {
+    display: block;
+    min-height: 100vh;
+  }
+
+  /* Hide everything except the entry form on phones */
+  .library,
+  .inbox-main,
+  .drawer,
+  .drawer-backdrop,
+  .tweaks {
+    display: none !important;
+  }
+
+  .brand {
+    position: static;
+    padding: 14px 16px;
+  }
+
+  .brand-meta {
+    display: none;
+  }
+
+  .form-panel {
+    position: static;
+    height: auto;
+    min-height: calc(100vh - 61px);
+    border-right: none;
+    padding: 20px 16px 32px;
+    overflow-y: visible;
+  }
+
+  .form-head {
+    margin-bottom: 16px;
+  }
+
+  .form-head h2 {
+    font-size: 17px;
+  }
+
+  input[type=text],
+  input[type=date],
+  textarea,
+  select {
+    font-size: 16px;
+    padding: 9px 0;
+  }
+
+  .chip {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .chips-sm .chip {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .submit-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submit-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lookup {
+    min-height: 0;
+  }
+}
