@@ -188,7 +188,7 @@ function App() {
       React.createElement('header', { className: 'brand' },
         React.createElement('div', { className: 'brand-mark' },
 React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-  React.createElement('img', { src: 'assets/icon-512.png', alt: '', style: { height: 28, width: 28 } }),
+  React.createElement('img', { src: 'Assets/icon-512.png', alt: '', style: { height: 28, width: 28 } }),
   React.createElement('span', { className: 'word' }, 'Crate', React.createElement('span', { className: 'dot' }))
 ),
           React.createElement('span', { className: 'sub' }, 'Music curation · est. 2026')
