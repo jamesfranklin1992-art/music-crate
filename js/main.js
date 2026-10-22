@@ -2,7 +2,7 @@
 
 // ── localStorage helpers ───────────────────────────────────
 const STORAGE_KEYS = {
-  tracks:    'crate:tracks',
+  tracks:    ':tracks',
   playlists: 'crate:playlists',
   tweaks:    'crate:tweaks',
 };
@@ -187,7 +187,10 @@ function App() {
     React.createElement('div', { className: 'app' },
       React.createElement('header', { className: 'brand' },
         React.createElement('div', { className: 'brand-mark' },
-          React.createElement('span', { className: 'word' }, 'Crate', React.createElement('span', { className: 'dot' })),
+React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+  React.createElement('img', { src: 'assets/icon-512.png', alt: '', style: { height: 28, width: 28 } }),
+  React.createElement('span', { className: 'word' }, 'Crate', React.createElement('span', { className: 'dot' }))
+),
           React.createElement('span', { className: 'sub' }, 'Music curation · est. 2026')
         ),
         React.createElement('nav', { className: 'top-nav' },
