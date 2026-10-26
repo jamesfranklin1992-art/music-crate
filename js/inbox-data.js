@@ -3,14 +3,14 @@
 // source/source-detail/moods/date before being promoted into The Crate.
 
 window.INTEGRATIONS = [
-  { id: 'ytm',     label: 'YouTube Music',  glyph: '▶', color: '#ff0033', detail: 'Liked Music playlist' },
-  { id: 'shazam',  label: 'Shazam',         glyph: '≋', color: '#0066ff', detail: 'Recently Shazam\u2019d' },
-  { id: 'spotify', label: 'Spotify',        glyph: '◉', color: '#1db954', detail: 'Liked Songs' },
+  { id: 'csv', label: 'CSV import', glyph: '⇪', color: '#f5a524', detail: 'Uploaded CSV file' },
+  { id: 'ytm', label: 'YouTube Music', glyph: '▶', color: '#ff0033', detail: 'Liked Music playlist' },
+  { id: 'shazam', label: 'Shazam', glyph: '≋', color: '#0066ff', detail: 'Recently Shazam\u2019d' },
+  { id: 'spotify', label: 'Spotify', glyph: '◉', color: '#1db954', detail: 'Liked Songs' },
 ];
 
 const ib = (id, title, artist, year, label, genre, bpm, key, integration, ingested, integrationMeta) => ({
   id, title, artist, year, label, genre, bpm, key, integration, ingested, integrationMeta,
-  // empty fields waiting for the user
   source: null, sourceDetail: '', mood: '', dateHeard: '', owned: false,
   prices: {
     discogs: Math.floor(5 + Math.random()*30),

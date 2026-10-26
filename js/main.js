@@ -1,6 +1,5 @@
 // main.js — top-level App + Tweaks wiring
 
-// ── localStorage helpers ───────────────────────────────────
 const STORAGE_KEYS = {
   tracks:    ':tracks',
   playlists: 'crate:playlists',
@@ -36,18 +35,16 @@ function usePersisted(storageKey, fallback) {
   }, [storageKey]);
   return [state, set];
 }
-// ──────────────────────────────────────────────────────────
 
 function App() {
-  // Tracks come from Supabase (loaded into window.TRACKS before mount) — not localStorage
   const [tracks, setTracks]       = React.useState(() => {
-    localStorage.removeItem(STORAGE_KEYS.tracks); // clear any stale demo data
+    localStorage.removeItem(STORAGE_KEYS.tracks);
     return window.TRACKS || [];
   });
   const [playlists, setPlaylists] = usePersisted(STORAGE_KEYS.playlists, []);
   const [tweaks, setTweaksState]  = usePersisted(STORAGE_KEYS.tweaks,    window.TWEAKS_DEFAULTS);
-  const [inbox, setInbox]         = React.useState(() => window.INBOX);  // inbox is session-only
-  const [view, setView]           = React.useState('crate'); // 'crate' | 'inbox' | 'playlists'
+  const [inbox, setInbox]         = React.useState(() => window.INBOX);
+  const [view, setView]           = React.useState('crate');
   const [activeId, setActiveId]   = React.useState(null);
   const [filter, setFilter]       = React.useState({ source: 'all', owned: 'all', q: '' });
   const [tweaksOpen, setTweaksOpen] = React.useState(false);
@@ -93,26 +90,24 @@ function App() {
   };
 
   const handleLog = async (newTrack) => {
-    // Optimistically update UI with a temporary local id
     setTracks(ts => [newTrack, ...ts]);
     setToast('Logged · ' + newTrack.title);
     setTimeout(() => setToast(null), 2400);
 
-    // Persist to Supabase — omit id so Supabase generates its own UUID
     const { data, error } = await window._supabase.from('tracks').insert({
-      title:         newTrack.title,
-      artist:        newTrack.artist,
-      year:          newTrack.year,
-      label:         newTrack.label,
-      genre:         newTrack.genre,
-      bpm:           newTrack.bpm,
-      key:           newTrack.key,
-      source:        newTrack.source,
+      title: newTrack.title,
+      artist: newTrack.artist,
+      year: newTrack.year,
+      label: newTrack.label,
+      genre: newTrack.genre,
+      bpm: newTrack.bpm,
+      key: newTrack.key,
+      source: newTrack.source,
       source_detail: newTrack.sourceDetail,
-      mood:          newTrack.mood,
-      date_heard:    newTrack.dateHeard,
-      notes:         newTrack.notes,
-      owned:         newTrack.owned,
+      mood: newTrack.mood,
+      date_heard: newTrack.dateHeard,
+      notes: newTrack.notes,
+      owned: newTrack.owned,
     }).select('id').single();
 
     if (error) {
@@ -120,7 +115,6 @@ function App() {
       setToast('⚠ Save failed — check console');
       setTimeout(() => setToast(null), 3000);
     } else if (data?.id) {
-      // Replace the temporary local id with the real Supabase UUID
       setTracks(ts => ts.map(t => t.id === newTrack.id ? { ...t, id: data.id } : t));
     }
   };
@@ -130,6 +124,9 @@ function App() {
   };
   const handleInboxDismiss = (id) => {
     setInbox(items => items.filter(t => t.id !== id));
+  };
+  const handleInboxImport = (importedItems) => {
+    setInbox(items => [...importedItems, ...items]);
   };
   const handleInboxPromote = (id) => {
     const item = inbox.find(t => t.id === id);
@@ -214,7 +211,11 @@ React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap
         React.createElement(window.FormPanel, { layout: tweaks.layout, onLog: handleLog }),
         React.createElement(window.Library, { tracks, activeId, onSelect: setActiveId, filter, setFilter })
       ) : view === 'inbox' ? React.createElement(window.Inbox, {
-        items: inbox, onPromote: handleInboxPromote, onDismiss: handleInboxDismiss, onUpdate: handleInboxUpdate
+        items: inbox,
+        onPromote: handleInboxPromote,
+        onDismiss: handleInboxDismiss,
+        onUpdate: handleInboxUpdate,
+        onImport: handleInboxImport,
       }) : React.createElement(window.Playlists, {
         tracks, playlists,
         onCreatePlaylist: handleCreatePlaylist,
@@ -266,8 +267,6 @@ function mountApp() {
   ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 }
 
-// Wait for Supabase data before mounting.
-// If crate:ready already fired before Babel finished compiling this file, mount now.
 if (window._crateReady) {
   mountApp();
 } else {

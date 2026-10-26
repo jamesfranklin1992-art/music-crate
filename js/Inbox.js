@@ -1,9 +1,10 @@
-// Inbox.jsx — staging area for auto-ingested tracks (YouTube Music, Shazam, etc.)
-// Each row expands into an append-form; user fills missing fields, then promotes to Crate.
+// Inbox.jsx — staging area for auto-ingested tracks (YouTube Music, Shazam, CSV, etc.)
 
-function Inbox({ items, onPromote, onDismiss, onUpdate }) {
+function Inbox({ items, onPromote, onDismiss, onUpdate, onImport }) {
   const [expanded, setExpanded] = React.useState(null);
   const [integrationFilter, setIntegrationFilter] = React.useState('all');
+  const [uploadMessage, setUploadMessage] = React.useState('');
+  const fileInputRef = React.useRef(null);
 
   const byIntegration = React.useMemo(() => {
     const c = {};
@@ -14,6 +15,26 @@ function Inbox({ items, onPromote, onDismiss, onUpdate }) {
   const filtered = integrationFilter === 'all'
     ? items
     : items.filter(t => t.integration === integrationFilter);
+
+  const handleCsvFile = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const result = csvToInboxItems(text);
+      if (!result.items.length) {
+        setUploadMessage(result.error || 'No valid tracks found — title and artist are required.');
+      } else {
+        onImport(result.items);
+        setUploadMessage(`Imported ${result.items.length} track${result.items.length === 1 ? '' : 's'}` +
+          (result.skipped ? ` · ${result.skipped} skipped` : ''));
+      }
+    } catch (err) {
+      console.error('[Crate] CSV import failed:', err);
+      setUploadMessage('Could not read that CSV file.');
+    }
+    event.target.value = '';
+  };
 
   return (
     <main className="library inbox-main">
@@ -30,6 +51,16 @@ function Inbox({ items, onPromote, onDismiss, onUpdate }) {
       </div>
 
       <div className="lib-filter">
+        <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',marginBottom:14}}>
+          <input ref={fileInputRef} type="file" accept=".csv,text/csv" style={{display:'none'}} onChange={handleCsvFile} />
+          <button type="button" className="btn ghost sm" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
+            ⇪ Upload CSV
+          </button>
+          {uploadMessage && (
+            <span style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--ink-3)'}}>{uploadMessage}</span>
+          )}
+        </div>
+
         <div className="integrations">
           <span className="int-lbl">Integrations</span>
           {window.INTEGRATIONS.map(i => (
@@ -82,6 +113,94 @@ function Inbox({ items, onPromote, onDismiss, onUpdate }) {
       </div>
     </main>
   );
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (quoted) {
+      if (char === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else quoted = false;
+      } else field += char;
+    } else if (char === '"') {
+      quoted = true;
+    } else if (char === ',') {
+      row.push(field); field = '';
+    } else if (char === '\n') {
+      row.push(field); rows.push(row); row = []; field = '';
+    } else if (char !== '\r') {
+      field += char;
+    }
+  }
+
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(value => value.trim() !== ''));
+}
+
+function csvToInboxItems(text) {
+  const parsed = parseCsv(text);
+  if (!parsed.length) return { items: [], skipped: 0, error: 'The CSV file was empty.' };
+
+  const headers = parsed[0].map(h => h.trim().toLowerCase());
+  const col = name => headers.indexOf(name.toLowerCase());
+  const required = ['title', 'artist'];
+  const missing = required.filter(name => col(name) === -1);
+  if (missing.length) return { items: [], skipped: 0, error: `Missing required column${missing.length === 1 ? '' : 's'}: ${missing.join(', ')}.` };
+
+  const value = (row, name) => {
+    const index = col(name);
+    return index === -1 ? '' : (row[index] || '').trim();
+  };
+  const number = v => {
+    if (!v) return null;
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const bool = v => ['true', 'yes', 'y', '1'].includes(v.toLowerCase());
+  const now = new Date().toISOString();
+  const items = [];
+  let skipped = 0;
+
+  for (let i = 1; i < parsed.length; i++) {
+    const row = parsed[i];
+    const title = value(row, 'title');
+    const artist = value(row, 'artist');
+    if (!title || !artist) { skipped++; continue; }
+
+    const source = value(row, 'source');
+    const dateHeard = value(row, 'dateHeard');
+    const parsedDate = dateHeard ? new Date(dateHeard) : null;
+    const ingested = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : now;
+
+    items.push({
+      id: `csv-${Date.now()}-${i}`,
+      title,
+      artist,
+      year: number(value(row, 'year')),
+      label: value(row, 'label') || '—',
+      genre: value(row, 'genre') || '—',
+      bpm: number(value(row, 'bpm')),
+      key: value(row, 'key') || null,
+      integration: 'csv',
+      ingested,
+      integrationMeta: { playlist: 'CSV upload' },
+      source: window.SOURCES.some(s => s.id === source) ? source : null,
+      sourceDetail: value(row, 'sourceDetail'),
+      mood: value(row, 'mood'),
+      dateHeard,
+      notes: value(row, 'notes'),
+      owned: bool(value(row, 'owned')),
+      prices: { discogs: null, bandcamp: null, beatport: null },
+    });
+  }
+
+  return { items, skipped, error: '' };
 }
 
 function InboxRow({ track, isExpanded, onToggle, onPromote, onDismiss, onUpdate }) {
@@ -226,7 +345,7 @@ function formatRel(iso) {
   const diff = (now - then) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  if (diff < 86400) return `${Math.floor(diff/86400)}d ago`;
   return `${Math.floor(diff/86400)}d ago`;
 }
 
